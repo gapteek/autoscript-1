@@ -3,12 +3,7 @@
 # go to root
 cd
 
-# disable ipv6
-echo 1 > /proc/sys/net/ipv6/conf/all/disable_ipv6
-sed -i '$ i\echo 1 > /proc/sys/net/ipv6/conf/all/disable_ipv6' /etc/rc.local
 
-# install wget and curl
-apt-get update;apt-get -y install wget curl;
 
 # set time GMT +7
 ln -fs /usr/share/zoneinfo/Asia/Jakarta /etc/localtime
@@ -17,10 +12,7 @@ ln -fs /usr/share/zoneinfo/Asia/Jakarta /etc/localtime
 sed -i 's/AcceptEnv/#AcceptEnv/g' /etc/ssh/sshd_config
 service ssh restart
 
-# set repo
-wget -O /etc/apt/sources.list "https://raw.github.com/gapteek/autoscript-1/master/conf/sources.list.debian7"
-wget "http://www.dotdeb.org/dotdeb.gpg"
-cat dotdeb.gpg | apt-key add -;rm dotdeb.gpg
+
 
 # remove unused
 apt-get -y --purge remove samba*;
@@ -33,13 +25,8 @@ apt-get update; apt-get -y upgrade;
 
 
 
-# install essential package
-apt-get -y install bmon iftop htop nmap axel nano iptables traceroute sysv-rc-conf dnsutils bc nethogs openvpn vnstat less screen psmisc apt-file whois sslh ptunnel ngrep mtr git zsh mrtg snmp snmpd snmp-mibs-downloader unzip unrar rsyslog debsums rkhunter
-apt-get -y install build-essential
 
-# disable exim
-service exim4 stop
-sysv-rc-conf exim4 off
+
 
 # update apt-file
 apt-file update
@@ -81,30 +68,13 @@ rm /root/webmin_1.660_all.deb
 service webmin restart
 service vnstat restart
 
-# downlaod script
-cd
-wget -O speedtest_cli.py "https://raw.github.com/sivel/speedtest-cli/master/speedtest_cli.py"
-wget -O bench-network.sh "https://raw.github.com/gapteek/autoscript-1/master/conf/bench-network.sh"
-wget -O ps_mem.py "https://raw.github.com/pixelb/ps_mem/master/ps_mem.py"
-wget -O limit.sh "https://raw.github.com/gapteek/autoscript-1/master/conf/limit.sh"
-curl http://script.jualssh.com/user-login.sh > user-login.sh
-curl http://script.jualssh.com/user-expire.sh > user-expire.sh
-curl http://script.jualssh.com/user-limit.sh > user-limit.sh
-echo "0 0 * * * root /root/user-expire.sh" > /etc/cron.d/user-expire
-sed -i '$ i\screen -AmdS limit /root/limit.sh' /etc/rc.local
-chmod +x bench-network.sh
-chmod +x speedtest_cli.py
-chmod +x ps_mem.py
-chmod +x user-login.sh
-chmod +x user-expire.sh
-chmod +x user-limit.sh
-chmod +x limit.sh
+
 
 # finalisasi
 
 service ssh restart
 service dropbear restart
-service fail2ban restart
+
 service webmin restart
 
 # info
