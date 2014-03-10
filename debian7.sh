@@ -55,10 +55,6 @@ service dropbear restart
 
 
 
-# install fail2ban
-apt-get -y install fail2ban;service fail2ban restart
-
-
 # install webmin
 cd
 wget "http://prdownloads.sourceforge.net/webadmin/webmin_1.660_all.deb"
