@@ -31,8 +31,7 @@ apt-get -y --purge remove bind9*;
 # update
 apt-get update; apt-get -y upgrade;
 
-# install webserver
-apt-get -y install nginx php5-fpm php5-cli
+
 
 # install essential package
 apt-get -y install bmon iftop htop nmap axel nano iptables traceroute sysv-rc-conf dnsutils bc nethogs openvpn vnstat less screen psmisc apt-file whois sslh ptunnel ngrep mtr git zsh mrtg snmp snmpd snmp-mibs-downloader unzip unrar rsyslog debsums rkhunter
@@ -45,9 +44,7 @@ sysv-rc-conf exim4 off
 # update apt-file
 apt-file update
 
-# setting vnstat
-vnstat -u -i venet0
-service vnstat restart
+
 
 # install screenfetch
 cd
@@ -57,71 +54,13 @@ chmod +x /usr/bin/screenfetch
 echo "clear" >> .profile
 echo "screenfetch" >> .profile
 
-# install webserver
-cd
-rm /etc/nginx/sites-enabled/default
-rm /etc/nginx/sites-available/default
-wget -O /etc/nginx/nginx.conf "https://raw.github.com/gapteek/autoscript-1/master/conf/nginx.conf"
-mkdir -p /home/vps/public_html
-echo "<pre>Setup by KangArie | JualSSH.com | @arieonline | 7946F434</pre>" > /home/vps/public_html/index.html
-echo "<?php phpinfo(); ?>" > /home/vps/public_html/info.php
-wget -O /etc/nginx/conf.d/vps.conf "https://raw.github.com/gapteek/autoscript-1/master/conf/vps.conf"
-sed -i 's/listen = \/var\/run\/php5-fpm.sock/listen = 127.0.0.1:9000/g' /etc/php5/fpm/pool.d/www.conf
-service php5-fpm restart
-service nginx restart
-
-# install openvpn
-wget -O /etc/openvpn/openvpn.tar "https://raw.github.com/gapteek/autoscript-1/master/conf/openvpn-debian.tar"
-cd /etc/openvpn/
-tar xf openvpn.tar
-wget -O /etc/openvpn/1194.conf "https://raw.github.com/gapteek/autoscript-1/master/conf/1194.conf"
-service openvpn restart
-sysctl -w net.ipv4.ip_forward=1
-sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/g' /etc/sysctl.conf
-wget -O /etc/iptables.up.rules "https://raw.github.com/gapteek/autoscript-1/master/conf/iptables.up.rules"
-sed -i '$ i\iptables-restore < /etc/iptables.up.rules' /etc/rc.local
-MYIP=`curl -s ifconfig.me`;
-MYIP2="s/xxxxxxxxx/$MYIP/g";
-sed -i $MYIP2 /etc/iptables.up.rules;
-iptables-restore < /etc/iptables.up.rules
-service openvpn restart
-
-# configure openvpn client config
-cd /etc/openvpn/
-wget -O /etc/openvpn/1194-client.ovpn "https://raw.github.com/gapteek/autoscript-1/master/conf/1194-client.conf"
-sed -i $MYIP2 /etc/openvpn/1194-client.ovpn;
-PASS=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 15 | head -n 1`;
-useradd -M -s /bin/false KangArie
-echo "KangArie:$PASS" | chpasswd
-echo "KangArie" > pass.txt
-echo "$PASS" >> pass.txt
-tar cf client.tar 1194-client.ovpn pass.txt
-cp client.tar /home/vps/public_html/
-cd
 # install badvpn
 wget -O /usr/bin/badvpn-udpgw "https://raw.github.com/gapteek/autoscript-1/master/conf/badvpn-udpgw"
 sed -i '$ i\screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7300' /etc/rc.local
 chmod +x /usr/bin/badvpn-udpgw
 screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7300
 
-# install mrtg
-wget -O /etc/snmp/snmpd.conf "https://raw.github.com/gapteek/autoscript-1/master/conf/snmpd.conf"
-wget -O /root/mrtg-mem.sh "https://raw.github.com/gapteek/autoscript-1/master/conf/mrtg-mem.sh"
-chmod +x /root/mrtg-mem.sh
-cd /etc/snmp/
-sed -i 's/TRAPDRUN=no/TRAPDRUN=yes/g' /etc/default/snmpd
-service snmpd restart
-snmpwalk -v 1 -c public localhost 1.3.6.1.4.1.2021.10.1.3.1
-mkdir -p /home/vps/public_html/mrtg
-cfgmaker --zero-speed 100000000 --global 'WorkDir: /home/vps/public_html/mrtg' --output /etc/mrtg.cfg public@localhost
-curl "https://raw.github.com/gapteek/autoscript-1//master/conf/mrtg.conf" >> /etc/mrtg.cfg
-sed -i 's/WorkDir: \/var\/www\/mrtg/# WorkDir: \/var\/www\/mrtg/g' /etc/mrtg.cfg
-sed -i 's/# Options\[_\]: growright, bits/Options\[_\]: growright/g' /etc/mrtg.cfg
-indexmaker --output=/home/vps/public_html/mrtg/index.html /etc/mrtg.cfg
-if [ -x /usr/bin/mrtg ] && [ -r /etc/mrtg.cfg ]; then mkdir -p /var/log/mrtg ; env LANG=C /usr/bin/mrtg /etc/mrtg.cfg 2>&1 | tee -a /var/log/mrtg/mrtg.log ; fi
-if [ -x /usr/bin/mrtg ] && [ -r /etc/mrtg.cfg ]; then mkdir -p /var/log/mrtg ; env LANG=C /usr/bin/mrtg /etc/mrtg.cfg 2>&1 | tee -a /var/log/mrtg/mrtg.log ; fi
-if [ -x /usr/bin/mrtg ] && [ -r /etc/mrtg.cfg ]; then mkdir -p /var/log/mrtg ; env LANG=C /usr/bin/mrtg /etc/mrtg.cfg 2>&1 | tee -a /var/log/mrtg/mrtg.log ; fi
-cd
+
 
 # setting port ssh
 sed -i '/Port 22/a Port 143' /etc/ssh/sshd_config
@@ -137,28 +76,12 @@ echo "/bin/false" >> /etc/shells
 service ssh restart
 service dropbear restart
 
-# install vnstat gui
-cd /home/vps/public_html/
-wget http://www.sqweek.com/sqweek/files/vnstat_php_frontend-1.5.1.tar.gz
-tar xf vnstat_php_frontend-1.5.1.tar.gz
-rm vnstat_php_frontend-1.5.1.tar.gz
-mv vnstat_php_frontend-1.5.1 vnstat
-cd vnstat
-sed -i 's/eth0/venet0/g' config.php
-sed -i "s/\$iface_list = array('venet0', 'sixxs');/\$iface_list = array('venet0');/g" config.php
-sed -i "s/\$language = 'nl';/\$language = 'en';/g" config.php
-sed -i 's/Internal/Internet/g' config.php
-sed -i '/SixXS IPv6/d' config.php
-cd
+
 
 # install fail2ban
 apt-get -y install fail2ban;service fail2ban restart
 
-# install squid
-apt-get -y install squid
-wget -O /etc/squid/squid.conf "https://raw.github.com/gapteek/autoscript-1/master/conf/squid.conf"
-sed -i $MYIP2 /etc/squid/squid.conf;
-service squid restart
+
 
 # install webmin
 cd
@@ -169,74 +92,16 @@ rm /root/webmin_1.660_all.deb
 service webmin restart
 service vnstat restart
 
-# downlaod script
-cd
-wget -O speedtest_cli.py "https://raw.github.com/sivel/speedtest-cli/master/speedtest_cli.py"
-wget -O bench-network.sh "https://raw.github.com/gapteek/autoscript-1/master/conf/bench-network.sh"
-wget -O ps_mem.py "https://raw.github.com/pixelb/ps_mem/master/ps_mem.py"
-wget -O limit.sh "https://raw.github.com/gapteek/autoscript-1/master/conf/limit.sh"
-curl http://script.jualssh.com/user-login.sh > user-login.sh
-curl http://script.jualssh.com/user-expire.sh > user-expire.sh
-curl http://script.jualssh.com/user-limit.sh > user-limit.sh
-echo "0 0 * * * root /root/user-expire.sh" > /etc/cron.d/user-expire
-sed -i '$ i\screen -AmdS limit /root/limit.sh' /etc/rc.local
-chmod +x bench-network.sh
-chmod +x speedtest_cli.py
-chmod +x ps_mem.py
-chmod +x user-login.sh
-chmod +x user-expire.sh
-chmod +x user-limit.sh
-chmod +x limit.sh
+
 
 # finalisasi
-chown -R www-data:www-data /home/vps/public_html
-service nginx start
-service php-fpm start
-service vnstat restart
-service openvpn restart
 service snmpd restart
 service ssh restart
 service dropbear restart
 service fail2ban restart
-service squid restart
 service webmin restart
 
 # info
 clear
-echo "JualSSH.com | @arieonline | KangArie | 7946F434"
-echo "==============================================="
-echo ""
-echo "Service"
-echo "-------"
-echo "OpenVPN  : TCP 1194 (client config : http://$MYIP/client.tar)"
-echo "OpenSSH  : 22, 143"
-echo "Dropbear : 109, 110, 443"
-echo "Squid    : 8080 (limit to IP SSH)"
-echo "badvpn   : badvpn-udpgw port 7300"
-echo ""
-echo "Script"
-echo "------"
-echo "./ps_mem.py"
-echo "./speedtest_cli.py --share"
-echo "./bench-network.sh"
-echo "./user-login.sh"
-echo "./user-expire.sh"
-echo "./user-limit.sh 2"
-echo ""
-echo "Account Default (utk SSH dan VPN)"
-echo "---------------"
-echo "User     : KangArie"
-echo "Password : $PASS"
-echo ""
-echo "Fitur lain"
-echo "----------"
-echo "Webmin   : https://$MYIP:10000/"
-echo "vnstat   : http://$MYIP/vnstat/"
-echo "MRTG     : http://$MYIP/mrtg/"
-echo "Timezone : Asia/Jakarta"
-echo "Fail2Ban : [on]"
-echo "IPv6     : [off]"
-echo ""
-echo "SILAHKAN REBOOT VPS ANDA !"
-echo ""
-echo "==============================================="
+
+echo "===========berhasil om ======================="
